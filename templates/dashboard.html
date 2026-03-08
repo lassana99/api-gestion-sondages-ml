@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #43cea2, #185a9d);
+            color: #333;
+        }
+        .dashboard-container {
+            background-color: #fff;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 10px;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        .dashboard-container:hover {
+            transform: scale(1.02);
+        }
+        .logo {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        h2 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #185a9d;
+            margin-bottom: 1rem;
+        }
+        label {
+            font-size: 1rem;
+            color: #555;
+            margin: 10px 0 5px;
+            display: block;
+        }
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            text-decoration: none;
+            font-weight: 500;
+            color: #fff;
+            background-color: #185a9d;
+            padding: 0.6rem 1.2rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #104773;
+        }
+        .result-box {
+            background-color: #f7f7f7;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        .scroll-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: #185a9d;
+            color: #fff;
+            padding: 0.8rem;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            display: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .scroll-top:hover {
+            background-color: #104773;
+            transform: scale(1.1);
+        }
+        h2 {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <!-- Logo de l'entreprise -->
+    <img src="/static/image/logoexp.jpeg" alt="Logo Expresso" class="logo">
+
+    <h2>Tableau de bord - Informations Clients</h2>
+
+    <!-- Section 1 : Rechercher les informations d'un client par MDN -->
+    <label for="mdn">Saisir le MDN du client :</label>
+    <input type="text" id="mdn" placeholder="Entrez le MDN">
+    <button onclick="getClientInfo()">Obtenir informations client</button>
+    <div id="client-info" class="result-box"></div>
+
+    <!-- Section 2 : Recommander des clients similaires -->
+    <label for="client-index">Indice du client :</label>
+    <input type="number" id="client-index" placeholder="Entrez l'indice du client">
+    <label for="num-similar-clients">Nombre de clients similaires à afficher :</label>
+    <input type="number" id="num-similar-clients" placeholder="Entrez le nombre de clients similaires">
+    <button onclick="getSimilarClients()">Obtenir clients similaires</button>
+    <div id="similar-clients" class="result-box"></div>
+
+    <!-- Section 3 : Informations de recharge par zone -->
+    <label for="zone">Saisir la zone :</label>
+    <input type="text" id="zone" placeholder="Entrez la zone">
+    <button onclick="getZoneInfo()">Obtenir informations de recharge</button>
+    <div id="zone-info" class="result-box"></div>
+</div>
+
+<!-- Bouton pour remonter en haut -->
+<div class="scroll-top" id="scroll-top" onclick="scrollToTop()">↑</div>
+
+<script>
+    // Fonction pour remonter en haut
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Afficher ou cacher le bouton en fonction de la position de défilement
+    window.addEventListener('scroll', () => {
+        const scrollTopButton = document.getElementById("scroll-top");
+        if (window.scrollY > 200) {
+            scrollTopButton.style.display = "block";
+        } else {
+            scrollTopButton.style.display = "none";
+        }
+    });
+
+    // Fonction pour récupérer les informations du client par MDN
+    async function getClientInfo() {
+        const mdn = document.getElementById("mdn").value;
+        const response = await fetch(`/client_info/${mdn}`);
+        const data = await response.json();
+        if (data.info) {
+            document.getElementById("client-info").innerHTML = `
+                <strong>Informations client :</strong><br>
+                Zone: ${data.info.Zone}<br>
+                Fréquence recharge: ${data.info.Frequence_recharge}<br>
+                Endroit recharge: ${data.info.Endroit_recharge}<br>
+                Canal recharge: ${data.info.Canal_recharge}<br>
+                Nom et prénom: ${data.info.Nom_et_prenom}
+            `;
+        } else {
+            document.getElementById("client-info").innerHTML = 'Aucune information trouvée pour ce MDN';
+        }
+    }
+
+    // Fonction pour obtenir les clients similaires
+    async function getSimilarClients() {
+        const clientIndex = document.getElementById("client-index").value;
+        const numSimilarClients = document.getElementById("num-similar-clients").value;
+        const response = await fetch(`/similar_clients?client_index=${clientIndex}&top_n=${numSimilarClients}`);
+        const data = await response.json();
+        if (data.clients) {
+            document.getElementById("similar-clients").innerHTML = data.clients.map(client => `
+                <strong>Client MDN:</strong> ${client.MDN}<br>
+                Zone: ${client.Zone}<br>
+                Fréquence recharge: ${client.Frequence_recharge}<br>
+                Canal recharge: ${client.Canal_recharge}<br><br>
+            `).join('');
+        } else {
+            document.getElementById("similar-clients").innerHTML = 'Aucun client similaire trouvé';
+        }
+    }
+
+    // Fonction pour récupérer la fréquence de recharge et le canal le plus utilisé dans une zone
+    async function getZoneInfo() {
+        const zone = document.getElementById("zone").value;
+        const response = await fetch(`/zone_info/${zone}`);
+        const data = await response.json();
+        if (data.frequence && data.canal) {
+            document.getElementById("zone-info").innerHTML = `
+                <strong>Fréquence de recharge la plus fréquente :</strong> ${data.frequence}<br>
+                <strong>Canal de recharge le plus utilisé :</strong> ${data.canal}
+            `;
+        } else {
+            document.getElementById("zone-info").innerHTML = 'Aucune information trouvée pour cette zone';
+        }
+    }
+</script>
+
+</body>
+</html>

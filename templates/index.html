@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - Recharge et Services</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #185a9d;
+            margin-bottom: 20px;
+        }
+        .field-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #185a9d;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #104773;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #185a9d;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background: #185a9d;
+            color: white;
+        }
+        .logo {
+            position: absolute;
+            top: 2rem;
+            left: 19rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+         <!-- Logo de l'entreprise -->
+    <img src="/static/image/logoexp.jpeg" alt="Logo Expresso" class="logo">
+        <h2>Tableau de bord - Recharge et Services</h2>
+
+        <!-- Affichage des statistiques -->
+        <div class="field-group">
+            <button onclick="getStatistics()">Afficher les statistiques par zone</button>
+            <div id="statistics-result" class="result"></div>
+        </div>
+
+        <!-- Affichage du nombre de clients avec ou sans difficulté de recharge -->
+        <div class="field-group">
+            <button onclick="getClientsByRechargeDifficulty()">Afficher les clients avec difficulté de recharge par zone</button>
+            <div id="recharge-difficulty-result" class="result"></div>
+        </div>
+
+        <!-- Affichage du nombre de clients avec ou sans point proche de service -->
+        <div class="field-group">
+            <button onclick="getClientsByServicePoint()">Afficher les clients avec point proche de service par zone</button>
+            <div id="service-point-result" class="result"></div>
+        </div>
+
+        <!-- Saisie des informations -->
+        <div class="field-group">
+            <label for="zone-input">Zone :</label>
+            <input type="text" id="zone-input" placeholder="Veuillez saisir la zone">
+        </div>
+        <div class="field-group">
+            <label for="difficulty-input">Difficulté de recharge :</label>
+            <select id="difficulty-input">
+                <option value="OUI">OUI</option>
+                <option value="NON">NON</option>
+            </select>
+        </div>
+        <div class="field-group">
+            <label for="point-input">Point de service proche :</label>
+            <select id="point-input">
+                <option value="OUI">OUI</option>
+                <option value="NON">NON</option>
+            </select>
+        </div>
+        <div class="field-group">
+            <button onclick="getFrequentJudgment()">Afficher les jugements fréquents</button>
+            <div id="judgment-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function getStatistics() {
+            const response = await fetch('/get_zones_difficulty_judgment');
+            const data = await response.json();
+            let output = '<h4>Statistiques par zone :</h4>';
+            output += '<table><tr><th>Zone</th><th>Cluster</th><th>Difficulté (OUI)</th><th>Difficulté (NON)</th><th>Jugement Fréquent</th></tr>';
+            data.forEach(item => {
+                output += `<tr>
+                    <td>${item.Zone}</td>
+                    <td>${item.Cluster}</td>
+                    <td>${item.Difficulté_OUI}</td>
+                    <td>${item.Difficulté_NON}</td>
+                    <td>${item.Jugement_Fréquent}</td>
+                </tr>`;
+            });
+            output += '</table>';
+            document.getElementById('statistics-result').innerHTML = output;
+        }
+
+        async function getClientsByRechargeDifficulty() {
+            const response = await fetch('/get_clients_by_recharge_difficulty');
+            const data = await response.json();
+            const zonesSeen = new Set();
+            let output = '<h4>Clients par difficulté de recharge :</h4>';
+            output += '<table><tr><th>Zone</th><th>Recharge (OUI)</th><th>Recharge (NON)</th></tr>';
+            data.forEach(item => {
+                if (!zonesSeen.has(item.Zone)) {
+                    zonesSeen.add(item.Zone);
+                    output += `<tr>
+                        <td>${item.Zone}</td>
+                        <td>${item.Recharge_OUI}</td>
+                        <td>${item.Recharge_NON}</td>
+                    </tr>`;
+                }
+            });
+            output += '</table>';
+            document.getElementById('recharge-difficulty-result').innerHTML = output;
+        }
+
+        async function getClientsByServicePoint() {
+            const response = await fetch('/get_clients_by_service_point');
+            const data = await response.json();
+            const zonesSeen = new Set();
+            let output = '<h4>Clients avec ou sans point proche de service :</h4>';
+            output += '<table><tr><th>Zone</th><th>Point Proche (OUI)</th><th>Point Proche (NON)</th></tr>';
+            data.forEach(item => {
+                if (!zonesSeen.has(item.Zone)) {
+                    zonesSeen.add(item.Zone);
+                    output += `<tr>
+                        <td>${item.Zone}</td>
+                        <td>${item.Point_Proche_OUI}</td>
+                        <td>${item.Point_Proche_NON}</td>
+                    </tr>`;
+                }
+            });
+            output += '</table>';
+            document.getElementById('service-point-result').innerHTML = output;
+        }
+
+        async function getFrequentJudgment() {
+            const zone = document.getElementById('zone-input').value;
+            const difficulty = document.getElementById('difficulty-input').value;
+            const point = document.getElementById('point-input').value;
+
+            const response = await fetch(`/get_frequent_judgment?zone=${zone}&difficulty=${difficulty}&point=${point}`);
+            const data = await response.json();
+            document.getElementById('judgment-result').innerHTML = `<h4>Jugement fréquent :</h4><p>${data.judgment}</p>`;
+        }
+    </script>
+</body>
+</html>

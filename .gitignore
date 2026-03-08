@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.class
+venv/
+env/
+.env
+.venv
+*.log
+instance/
+.pytest_cache/
+.vscode/
+# Fichiers de données volumineux (si nécessaire)
+*.csv
+*.xlsx
